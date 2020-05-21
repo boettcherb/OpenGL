@@ -1,4 +1,5 @@
 #include "ShaderProgram.h"
+#include "Mesh.h"
 
 #include <glad/glad.h>
 #include <GLFW/GLFW3.h>
@@ -68,6 +69,16 @@ int main() {
 
     std::cout << "OpenGL version: " << glGetString(GL_VERSION) << '\n';
 
+    // vertex data for the triangle
+    float vertexData[] = {
+        //  3D Position
+        // X     Y     Z
+        -0.5f, -0.5f, 0.0f, // vertex 0
+         0.5f, -0.5f, 0.0f, // vertex 1
+         0.0f,  0.5f, 0.0f  // vertex 2
+    };
+
+    Mesh triangle(vertexData, sizeof(vertexData), { 3 });
     ShaderProgram shader({ VERTEX_SHADER, FRAGMENT_SHADER });
 
     // set clear color (background color)
@@ -80,7 +91,9 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // render graphics stuff here
+        triangle.bind();
         shader.bind();
+        glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
