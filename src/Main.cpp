@@ -69,8 +69,7 @@ int main() {
 
     std::cout << "OpenGL version: " << glGetString(GL_VERSION) << '\n';
 
-    // vertex data for the triangle
-    float vertexData[] = {
+    float triangle1[] = {
         //  3D Position
         // X     Y     Z
         -0.5f, -0.5f, 0.0f, // vertex 0
@@ -78,7 +77,14 @@ int main() {
          0.0f,  0.5f, 0.0f  // vertex 2
     };
 
-    Mesh triangle(vertexData, sizeof(vertexData), { 3 });
+    float triangle2[] = {
+        -1.0f, 1.0f, 0.0f,
+         1.0f, 1.0f, 0.0f,
+         -1.0f,  0.0f, 0.0f
+    };
+
+    Mesh mesh1(triangle1, sizeof(triangle1), { 3 });
+    Mesh mesh2(triangle2, sizeof(triangle2), { 3 });
     ShaderProgram shader({ VERTEX_SHADER, FRAGMENT_SHADER });
 
     // set clear color (background color)
@@ -91,8 +97,10 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // render graphics stuff here
-        triangle.bind();
         shader.bind();
+        mesh1.bind();
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        mesh2.bind();
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glfwSwapBuffers(window);
