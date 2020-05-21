@@ -6,11 +6,20 @@
 #include <iostream>
 #include <string>
 
-const unsigned int SCR_WIDTH = 960;
-const unsigned int SCR_HEIGHT = 540;
+unsigned int SCR_WIDTH = 960;
+unsigned int SCR_HEIGHT = 540;
 const char* SCR_TITLE = "OpenGL Window";
 const std::string VERTEX_SHADER = "res/shaders/vertex.glsl";
 const std::string FRAGMENT_SHADER = "res/shaders/fragment.glsl";
+
+// Whenever the window size changes, this callback function executes
+void framebuffer_size_callback(GLFWwindow* /* window */, int width, int height) {
+    SCR_WIDTH = width;
+    SCR_HEIGHT = height;
+
+    // tell OpenGL the new dimensions of the window
+    glViewport(0, 0, width, height);
+}
 
 int main() {
     // initialize GLFW
@@ -38,6 +47,9 @@ int main() {
     // Ex: My monitor has a refresh rate of 60hz, so the max FPS of this 
     // game (for me) will be 60 FPS
     glfwSwapInterval(1);
+
+    // call the framebuffer_size_callback function when the window is resized
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     // initialize GLAD
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
