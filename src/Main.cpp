@@ -1,11 +1,16 @@
+#include "ShaderProgram.h"
+
 #include <glad/glad.h>
 #include <GLFW/GLFW3.h>
 
 #include <iostream>
+#include <string>
 
 const unsigned int SCR_WIDTH = 960;
 const unsigned int SCR_HEIGHT = 540;
 const char* SCR_TITLE = "OpenGL Window";
+const std::string VERTEX_SHADER = "res/shaders/vertex.glsl";
+const std::string FRAGMENT_SHADER = "res/shaders/fragment.glsl";
 
 int main() {
     // initialize GLFW
@@ -43,6 +48,8 @@ int main() {
 
     std::cout << "OpenGL version: " << glGetString(GL_VERSION) << '\n';
 
+    ShaderProgram shader({ VERTEX_SHADER, FRAGMENT_SHADER });
+
     // set clear color (background color)
     glClearColor(0.2f, 0.3f, 0.8f, 1.0f);
 
@@ -51,9 +58,8 @@ int main() {
         // clear the screen
         glClear(GL_COLOR_BUFFER_BIT);
 
-
         // render graphics stuff here
-
+        shader.bind();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
