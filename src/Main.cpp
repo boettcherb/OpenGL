@@ -21,6 +21,14 @@ void framebuffer_size_callback(GLFWwindow* /* window */, int width, int height) 
     glViewport(0, 0, width, height);
 }
 
+// Called every frame inside the render loop
+void processInput(GLFWwindow* window) {
+    // if the escape key is pressed, tell the window to close
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window, true);
+    }
+}
+
 int main() {
     // initialize GLFW
     if (!glfwInit()) {
@@ -67,6 +75,7 @@ int main() {
 
     // render loop
     while (!glfwWindowShouldClose(window)) {
+        processInput(window);
         // clear the screen
         glClear(GL_COLOR_BUFFER_BIT);
 
