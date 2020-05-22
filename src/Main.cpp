@@ -6,7 +6,6 @@
 
 #include <iostream>
 #include <string>
-#include <cmath>
 
 unsigned int scrWidth = 960;
 unsigned int scrHeight = 540;
@@ -70,27 +69,24 @@ int main() {
     std::cout << "OpenGL version: " << glGetString(GL_VERSION) << '\n';
 
     const float VB[] = {
-        //  3D Position
-        // X     Y      Z
-         0.8f,  0.8f,  0.0f, // 0
-         0.8f,  0.0f,  0.0f, // 1
-         0.8f, -0.8f,  0.0f, // 2
-         0.0f,  0.8f,  0.0f, // 3
-         0.0f,  0.0f,  0.0f, // 4
-         0.0f, -0.8f,  0.0f, // 5
-        -0.8f,  0.8f,  0.0f, // 6
-        -0.8f,  0.0f,  0.0f, // 7
-        -0.8f, -0.8f,  0.0f, // 8
+        //  3D Position            Color
+        // X     Y      Z      R     G     B
+         0.8f,  0.8f,  0.0f,  1.0f, 0.0f, 0.0f, // 0
+         0.8f,  0.0f,  0.0f,  0.0f, 0.0f, 0.0f, // 1
+         0.8f, -0.8f,  0.0f,  0.0f, 0.0f, 0.0f, // 2
+         0.0f,  0.8f,  0.0f,  0.5f, 0.5f, 0.5f, // 3
+         0.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // 4
+         0.0f, -0.8f,  0.0f,  0.0f, 1.0f, 0.0f, // 5
+        -0.8f,  0.8f,  0.0f,  0.0f, 0.0f, 1.0f, // 6
+        -0.8f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // 7
+        -0.8f, -0.8f,  0.0f,  1.0f, 1.0f, 1.0f, // 8
     };
 
-    const unsigned int IBData1[] = {
+    const unsigned int IBData[] = {
         0, 1, 4,
         2, 5, 4,
         8, 7, 4,
         4, 6, 3,
-    };
-
-    const unsigned int IBData2[] = {
         1, 2, 4,
         4, 3, 0,
         4, 5, 8,
@@ -98,11 +94,8 @@ int main() {
     };
 
     ShaderProgram shader1({ VERTEX_SHADER, FRAGMENT_SHADER1 });
-    ShaderProgram shader2({ VERTEX_SHADER, FRAGMENT_SHADER2 });
-
-    Mesh rect(VB, sizeof(VB), { 3 });
-    rect.addSubmesh(IBData1, 12u, &shader1);
-    rect.addSubmesh(IBData2, 12u, &shader2);
+    Mesh rect(VB, sizeof(VB), { 3, 3 });
+    rect.addSubmesh(IBData, sizeof(IBData) / sizeof(unsigned int), &shader1);
 
     // set clear color (background color)
     glClearColor(0.2f, 0.3f, 0.8f, 1.0f);
@@ -117,8 +110,6 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // render graphics stuff here
-        float greenValue = static_cast<float>(std::sin(glfwGetTime()) / 2 + 0.5);
-        shader1.addUniform4f("u_color", 0.0f, greenValue, 0.0f, 1.0f);
         rect.render();
 
         glfwSwapBuffers(window);
