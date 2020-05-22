@@ -40,7 +40,7 @@ void ShaderProgram::compileAndLink() const {
         glGetShaderiv(shader.m_id, GL_COMPILE_STATUS, &success);
         if (!success) {
             glGetShaderInfoLog(shader.m_id, 512, nullptr, infoLog);
-            std::cout << "Shader Compilation Failed\n" << infoLog << '\n';
+            std::cerr << "Shader Compilation Failed\n" << infoLog << '\n';
         }
         glAttachShader(m_shaderProgramID, shader.m_id);
     }
@@ -51,7 +51,7 @@ void ShaderProgram::compileAndLink() const {
     glValidateProgram(m_shaderProgramID);
     glGetProgramiv(m_shaderProgramID, GL_VALIDATE_STATUS, &success);
     if (!success) {
-        std::cout << "Shader Program Linking Failed\n";
+        std::cerr << "Shader Program Linking Failed\n";
     }
 }
 
@@ -77,7 +77,7 @@ unsigned int ShaderProgram::getShaderType(const std::string& line) const {
             return GL_FRAGMENT_SHADER;
         }
     }
-    std::cout << "Invalid Shader Header. Place a comment at the top of your shader files "
+    std::cerr << "Invalid Shader Header. Place a comment at the top of your shader files "
                  "with the shader type.\nEx: // VERTEX\n";
     return 0;
 }
