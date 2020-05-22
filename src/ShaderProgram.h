@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 class ShaderProgram {
 
@@ -15,6 +16,7 @@ class ShaderProgram {
 
 	std::vector<Shader> m_shaders;
 	unsigned int m_shaderProgramID;
+	std::unordered_map<std::string, int> m_uniformLocationCache;
 
 public:
 	ShaderProgram(const std::vector<std::string>& filePaths);
@@ -22,11 +24,13 @@ public:
 
 	void bind() const;
 	void unbind() const;
+	void addUniform4f(const std::string& name, float v0, float v1, float v2, float v3);
 
 private:
 	void compileAndLink() const;
 	std::pair<unsigned int, std::string> parseShader(const std::string& filePath) const;
 	unsigned int getShaderType(const std::string& line) const;
+	int getUniformLocation(const std::string& name);
 };
 
 #endif

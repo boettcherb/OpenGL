@@ -6,6 +6,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 ShaderProgram::Shader::Shader(unsigned int type, unsigned int id, const std::string& source)
     : m_type{ type }, m_id{ id }, m_source{ source } {}
@@ -88,4 +89,21 @@ void ShaderProgram::bind() const {
 
 void ShaderProgram::unbind() const {
     glUseProgram(0);
+}
+
+void ShaderProgram::addUniform4f(const std::string& name, float v0, float v1, float v2, float v3) {
+    glUniform4f(getUniformLocation(name), v0, v1, v2, v3);
+}
+
+int ShaderProgram::getUniformLocation(const std::string& name) {
+    auto cachedLocation = m_uniformLocationCache.find(name);
+    if (cachedLocation != m_uniformLocationCache.end()) {
+        return cachedLocation->second;
+    }
+    int location = glGetUniformLocation(m_shaderProgramID, name.c_str());
+    if (location == -1) {
+        std::cerr << "The Uniform " + name + " does not exist!\n";
+    }
+    m_uniformLocationCache[name] = location;
+    return location;
 }
