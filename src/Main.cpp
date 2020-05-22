@@ -7,16 +7,17 @@
 #include <iostream>
 #include <string>
 
-unsigned int SCR_WIDTH = 960;
-unsigned int SCR_HEIGHT = 540;
+unsigned int scrWidth = 960;
+unsigned int scrHeight = 540;
 const char* SCR_TITLE = "OpenGL Window";
 const std::string VERTEX_SHADER = "res/shaders/vertex.glsl";
-const std::string FRAGMENT_SHADER = "res/shaders/fragment.glsl";
+const std::string FRAGMENT_SHADER1 = "res/shaders/fragment.glsl";
+const std::string FRAGMENT_SHADER2 = "res/shaders/fragment2.glsl";
 
 // Whenever the window size changes, this callback function executes
 void framebuffer_size_callback(GLFWwindow* /* window */, int width, int height) {
-    SCR_WIDTH = width;
-    SCR_HEIGHT = height;
+    scrWidth = width;
+    scrHeight = height;
 
     // tell OpenGL the new dimensions of the window
     glViewport(0, 0, width, height);
@@ -44,7 +45,7 @@ int main() {
 #endif
 
     // create the main window
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, SCR_TITLE, nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(scrWidth, scrHeight, SCR_TITLE, nullptr, nullptr);
     if (!window) {
         std::cout << "Failed to create GLFW window\n";
         glfwTerminate();
@@ -53,8 +54,6 @@ int main() {
     glfwMakeContextCurrent(window);
 
     // Tie the buffer swap rate (the FPS) to your monitor's refresh rate
-    // Ex: My monitor has a refresh rate of 60hz, so the max FPS of this 
-    // game (for me) will be 60 FPS
     glfwSwapInterval(1);
 
     // call the framebuffer_size_callback function when the window is resized
@@ -69,26 +68,46 @@ int main() {
 
     std::cout << "OpenGL version: " << glGetString(GL_VERSION) << '\n';
 
-    float triangle1[] = {
+    const float VB[] = {
         //  3D Position
-        // X     Y     Z
-        -0.5f, -0.5f, 0.0f, // vertex 0
-         0.5f, -0.5f, 0.0f, // vertex 1
-         0.0f,  0.5f, 0.0f  // vertex 2
+        // X     Y      Z
+         0.8f,  0.8f,  0.0f, // 0
+         0.8f,  0.0f,  0.0f, // 1
+         0.8f, -0.8f,  0.0f, // 2
+         0.0f,  0.8f,  0.0f, // 3
+         0.0f,  0.0f,  0.0f, // 4
+         0.0f, -0.8f,  0.0f, // 5
+        -0.8f,  0.8f,  0.0f, // 6
+        -0.8f,  0.0f,  0.0f, // 7
+        -0.8f, -0.8f,  0.0f, // 8
     };
 
-    float triangle2[] = {
-        -1.0f, 1.0f, 0.0f,
-         1.0f, 1.0f, 0.0f,
-         -1.0f,  0.0f, 0.0f
+    const unsigned int IBData1[] = {
+        0, 1, 4,
+        2, 5, 4,
+        8, 7, 4,
+        4, 6, 3,
     };
 
-    Mesh mesh1(triangle1, sizeof(triangle1), { 3 });
-    Mesh mesh2(triangle2, sizeof(triangle2), { 3 });
-    ShaderProgram shader({ VERTEX_SHADER, FRAGMENT_SHADER });
+    const unsigned int IBData2[] = {
+        1, 2, 4,
+        4, 3, 0,
+        4, 5, 8,
+        7, 6, 4,
+    };
+
+    ShaderProgram shader1({ VERTEX_SHADER, FRAGMENT_SHADER1 });
+    ShaderProgram shader2({ VERTEX_SHADER, FRAGMENT_SHADER2 });
+
+    Mesh rect(VB, sizeof(VB), { 3 });
+    rect.addSubmesh(IBData1, 12u, &shader1);
+    rect.addSubmesh(IBData2, 12u, &shader2);
 
     // set clear color (background color)
     glClearColor(0.2f, 0.3f, 0.8f, 1.0f);
+
+    // draw only the outlines of the triangles
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // render loop
     while (!glfwWindowShouldClose(window)) {
@@ -97,11 +116,7 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // render graphics stuff here
-        shader.bind();
-        mesh1.bind();
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        mesh2.bind();
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        rect.render();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
