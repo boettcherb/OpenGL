@@ -92,6 +92,7 @@ void ShaderProgram::unbind() const {
 }
 
 void ShaderProgram::addUniform4f(const std::string& name, float v0, float v1, float v2, float v3) {
+    bind();
     glUniform4f(getUniformLocation(name), v0, v1, v2, v3);
 }
 
