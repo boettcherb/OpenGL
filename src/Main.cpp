@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <string>
+#include <cmath>
 
 unsigned int scrWidth = 960;
 unsigned int scrHeight = 540;
@@ -116,6 +117,8 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // render graphics stuff here
+        float greenValue = static_cast<float>(std::sin(glfwGetTime()) / 2 + 0.5);
+        shader1.addUniform4f("u_color", 0.0f, greenValue, 0.0f, 1.0f);
         rect.render();
 
         glfwSwapBuffers(window);
