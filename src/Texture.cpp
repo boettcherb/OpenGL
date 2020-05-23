@@ -8,7 +8,7 @@
 Texture::Texture(const std::string& filePath, unsigned int slot) : m_textureSlot{ slot } {
 	// create and bind the texture
 	glGenTextures(1, &m_textureID);
-	glBindTexture(GL_TEXTURE_2D, m_textureID);
+	bind();
 
 	// texture filtering (for when image is too large or small)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
