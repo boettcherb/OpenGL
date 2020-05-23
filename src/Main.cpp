@@ -1,5 +1,6 @@
 #include "ShaderProgram.h"
 #include "Mesh.h"
+#include "Texture.h"
 
 #include <glad/glad.h>
 #include <GLFW/GLFW3.h>
@@ -10,9 +11,13 @@
 unsigned int scrWidth = 960;
 unsigned int scrHeight = 540;
 const char* SCR_TITLE = "OpenGL Window";
+
 const std::string VERTEX_SHADER = "res/shaders/vertex.glsl";
 const std::string FRAGMENT_SHADER1 = "res/shaders/fragment.glsl";
 const std::string FRAGMENT_SHADER2 = "res/shaders/fragment2.glsl";
+
+const std::string FACE_TEXTURE = "res/textures/face.png";
+const std::string SHELF_TEXTURE = "res/textures/container.jpg";
 
 // Whenever the window size changes, this callback function executes
 void framebuffer_size_callback(GLFWwindow* /* window */, int width, int height) {
@@ -47,7 +52,7 @@ int main() {
     // create the main window
     GLFWwindow* window = glfwCreateWindow(scrWidth, scrHeight, SCR_TITLE, nullptr, nullptr);
     if (!window) {
-        std::cout << "Failed to create GLFW window\n";
+        std::cerr << "Failed to create GLFW window\n";
         glfwTerminate();
         return -1;
     }
@@ -61,44 +66,40 @@ int main() {
 
     // initialize GLAD
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
-        std::cout << "Failed to initialize GLAD\n";
+        std::cerr << "Failed to initialize GLAD\n";
         glfwTerminate();
         return -1;
     }
 
     std::cout << "OpenGL version: " << glGetString(GL_VERSION) << '\n';
 
-    const float VB[] = {
-        //  3D Position            Color
-        // X     Y      Z      R     G     B
-         0.8f,  0.8f,  0.0f,  1.0f, 0.0f, 0.0f, // 0
-         0.8f,  0.0f,  0.0f,  0.0f, 0.0f, 0.0f, // 1
-         0.8f, -0.8f,  0.0f,  0.0f, 0.0f, 0.0f, // 2
-         0.0f,  0.8f,  0.0f,  0.5f, 0.5f, 0.5f, // 3
-         0.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // 4
-         0.0f, -0.8f,  0.0f,  0.0f, 1.0f, 0.0f, // 5
-        -0.8f,  0.8f,  0.0f,  0.0f, 0.0f, 1.0f, // 6
-        -0.8f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // 7
-        -0.8f, -0.8f,  0.0f,  1.0f, 1.0f, 1.0f, // 8
+    const float VBData[] = {
+        //    position               color        texture coords
+        -0.5f, -0.5f, 0.0f,    1.0f, 0.0f, 0.0f,    0.0f, 0.0f, 
+         0.5f, -0.5f, 0.0f,    0.0f, 1.0f, 0.0f,    1.0f, 0.0f,
+        -0.5f,  0.5f, 0.0f,    0.0f, 0.0f, 1.0f,    0.0f, 1.0f,
+         0.5f,  0.5f, 0.0f,    1.0f, 1.0f, 0.0f,    1.0f, 1.0f,
     };
 
-    const unsigned int IBData[] = {
-        0, 1, 4,
-        2, 5, 4,
-        8, 7, 4,
-        4, 6, 3,
-        1, 2, 4,
-        4, 3, 0,
-        4, 5, 8,
-        7, 6, 4,
+    const unsigned int VBIndeces[] = {
+        0, 1, 3,
+        0, 2, 3,
     };
 
-    ShaderProgram shader1({ VERTEX_SHADER, FRAGMENT_SHADER1 });
-    Mesh rect(VB, sizeof(VB), { 3, 3 });
-    rect.addSubmesh(IBData, sizeof(IBData) / sizeof(unsigned int), &shader1);
+    ShaderProgram shader({ VERTEX_SHADER, FRAGMENT_SHADER1 });
+
+    Mesh mesh(VBData, sizeof(VBData), { 3, 3, 2 });
+    mesh.addSubmesh(VBIndeces, sizeof(VBIndeces) / sizeof(unsigned int), &shader);
+
+    const int FACE_TEXTURE_SLOT = 0;
+    const int SHELF_TEXTURE_SLOT = 1;
+    Texture face(FACE_TEXTURE, FACE_TEXTURE_SLOT);
+    Texture shelf(SHELF_TEXTURE, SHELF_TEXTURE_SLOT);
+    shader.addTexture(&face, "u_texture_face");
+    shader.addTexture(&shelf, "u_texture_shelf");
 
     // set clear color (background color)
-    glClearColor(0.2f, 0.3f, 0.8f, 1.0f);
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
     // draw only the outlines of the triangles
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -110,7 +111,7 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // render graphics stuff here
-        rect.render();
+        mesh.render();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
