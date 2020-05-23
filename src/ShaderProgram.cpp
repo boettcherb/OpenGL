@@ -1,4 +1,5 @@
 #include "ShaderProgram.h"
+#include "Texture.h"
 
 #include <glad/glad.h>
 
@@ -91,6 +92,12 @@ void ShaderProgram::bind() const {
 
 void ShaderProgram::unbind() const {
     glUseProgram(0);
+}
+
+void ShaderProgram::addTexture(const Texture* texture, const std::string& name) {
+    bind();
+    texture->bind();
+    addUniform1i(name, texture->getSlot());
 }
 
 void ShaderProgram::addUniform4f(const std::string& name, float v0, float v1, float v2, float v3) {

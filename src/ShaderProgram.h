@@ -1,6 +1,8 @@
 #ifndef SHADER_PROGRAM_H_INCLUDED
 #define SHADER_PROGRAM_H_INCLUDED
 
+#include "Texture.h"
+
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -24,6 +26,7 @@ public:
 
 	void bind() const;
 	void unbind() const;
+	void addTexture(const Texture* texture, const std::string& name);
 	void addUniform4f(const std::string& name, float v0, float v1, float v2, float v3);
 	void addUniform1i(const std::string& name, int value);
 
