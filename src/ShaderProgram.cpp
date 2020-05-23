@@ -20,12 +20,14 @@ ShaderProgram::ShaderProgram(const std::vector<std::string>& filePaths) {
 	    m_shaders.emplace_back(shaderData.first, id, shaderData.second);
     }
     compileAndLink();
-}
 
-ShaderProgram::~ShaderProgram() {
+    // the individual shaders are not needed after they have been linked into one program
     for (const auto& shader : m_shaders) {
         glDeleteShader(shader.m_id);
     }
+}
+
+ShaderProgram::~ShaderProgram() {
     glDeleteProgram(m_shaderProgramID);
 }
 
@@ -94,6 +96,11 @@ void ShaderProgram::unbind() const {
 void ShaderProgram::addUniform4f(const std::string& name, float v0, float v1, float v2, float v3) {
     bind();
     glUniform4f(getUniformLocation(name), v0, v1, v2, v3);
+}
+
+void ShaderProgram::addUniform1i(const std::string& name, int value) {
+    bind();
+    glUniform1i(getUniformLocation(name), value);
 }
 
 int ShaderProgram::getUniformLocation(const std::string& name) {
