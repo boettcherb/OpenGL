@@ -3,6 +3,8 @@
 
 #include "Texture.h"
 
+#include <glm/glm.hpp>
+
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -29,6 +31,7 @@ public:
 	void addTexture(const Texture* texture, const std::string& name);
 	void addUniform4f(const std::string& name, float v0, float v1, float v2, float v3);
 	void addUniform1i(const std::string& name, int value);
+	void addUniformMat4f(const std::string& name, const glm::mat4& matrix);
 
 private:
 	void compileAndLink() const;
