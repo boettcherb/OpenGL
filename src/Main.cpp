@@ -4,12 +4,14 @@
 
 #include <glad/glad.h>
 #include <GLFW/GLFW3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <iostream>
 #include <string>
 
-unsigned int scrWidth = 960;
-unsigned int scrHeight = 540;
+unsigned int scrWidth = 800;
+unsigned int scrHeight = 600;
 const char* SCR_TITLE = "OpenGL Window";
 
 const std::string VERTEX_SHADER = "res/shaders/vertex.glsl";
@@ -75,10 +77,10 @@ int main() {
 
     const float VBData[] = {
         //    position               color        texture coords
-        -0.5f, -0.5f, 0.0f,    1.0f, 0.0f, 0.0f,    0.0f, 0.0f, 
-         0.5f, -0.5f, 0.0f,    0.0f, 1.0f, 0.0f,    1.0f, 0.0f,
-        -0.5f,  0.5f, 0.0f,    0.0f, 0.0f, 1.0f,    0.0f, 1.0f,
-         0.5f,  0.5f, 0.0f,    1.0f, 1.0f, 0.0f,    1.0f, 1.0f,
+        -0.9f, -0.9f, 0.0f,    1.0f, 0.0f, 0.0f,    0.0f, 0.0f, 
+         0.9f, -0.9f, 0.0f,    0.0f, 1.0f, 0.0f,    1.0f, 0.0f,
+        -0.9f,  0.9f, 0.0f,    0.0f, 0.0f, 1.0f,    0.0f, 1.0f,
+         0.9f,  0.9f, 0.0f,    1.0f, 1.0f, 0.0f,    1.0f, 1.0f,
     };
 
     const unsigned int VBIndeces[] = {
@@ -110,13 +112,24 @@ int main() {
         // clear the screen
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // render graphics stuff here
+        // projection matrix
+        glm::mat4 proj = glm::mat4(1.0f);
+        // move down and to the right
+        proj = glm::translate(proj, glm::vec3(0.5f, -0.5f, 0.0f));
+        // rotate vertices around the z axis
+        // the vector (should be a unit vector) is the translation axis
+        proj = glm::rotate(proj, static_cast<float>(glfwGetTime()), glm::vec3(0.0f, 0.0f, 1.0f));
+        // scale all axes by 1/2
+        proj = glm::scale(proj, glm::vec3(0.5f, 0.5f, 0.5f));
+        // give matrix to shaders
+        shader.addUniformMat4f("u_trans", proj);
+
         mesh.render();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
+    
     // clean up
     glfwTerminate();
 
