@@ -68,7 +68,7 @@ int main() {
     glfwMakeContextCurrent(window);
 
     // Tie the buffer swap rate (the FPS) to your monitor's refresh rate
-    glfwSwapInterval(1);
+    // glfwSwapInterval(1);
 
     // call the framebuffer_size_callback function when the window is resized
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -105,6 +105,11 @@ int main() {
     // draw only the outlines of the triangles
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+    // variables for the FPS counter
+    double previousTime = glfwGetTime();
+    double totalFrames = 0, seconds = 0;
+    int FPS = 0;
+    
     // render loop
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
@@ -115,11 +120,21 @@ int main() {
         float y = (1.0f + static_cast<float>(std::cos(glfwGetTime()))) / 4.0f;
         shader.addUniform1f("u_offsetX", x);
         shader.addUniform1f("u_offsetY", y);
-
         recur(mesh, &shader, Point(60.0f, 0.0f), Point(740.0f, 0.0f), Point(400.0f, 588.897f), 1);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+        
+        // FPS counter
+        double currentTime = glfwGetTime();
+        FPS++;
+        if (currentTime - previousTime >= 1.0) {
+            ++seconds;
+            totalFrames += FPS;
+            std::cout << "FPS: " << FPS << ", average FPS: " << totalFrames / seconds << '\n';
+            FPS = 0;
+            previousTime = currentTime;
+        }
     }
     
     // clean up
@@ -138,28 +153,25 @@ Point avg(const Point& p1, const Point& p2) {
 // br = the bottom right point
 // top = the top point
 void recur(const Mesh& mesh, ShaderProgram* shader, Point bl, Point br, Point top, int invScale) {
-    if (invScale < 128) {
+    if (invScale <= 64) {
         // the 3 midpoints along the edges of the triangle made from bl, br, and top
         // this triangle is upside down and inside the triangle made from bl, br, and top
         Point tl = avg(top, bl);    // the top left point
         Point tr = avg(top, br);    // the top left point
         Point bottom = avg(bl, br); // the bottom point
 
-        glm::mat4 proj = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f);
+        glm::mat4 proj = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f -1.0f, 1.0f);
         // the vertex positions are set up so that the bottom point is (0, 0)
         proj = glm::translate(proj, glm::vec3(bottom.first, bottom.second, 0.0f));
         // scale by 0.5 for each new level of triangles
         float scale = 1.0f / static_cast<float>(invScale);
-        proj = glm::scale(proj, glm::vec3(scale, scale, scale));
+        proj = glm::scale(proj, glm::vec3(scale, scale, 1.0f));
         shader->addUniformMat4f("u_trans", proj);
 
         mesh.render();
 
-        // bottom left
-        recur(mesh, shader, bl, bottom, tl, invScale * 2); // bottom left
-        // bottom right
-        recur(mesh, shader, bottom, br, tr, invScale * 2); // bottom right
-        // top
-        recur(mesh, shader, tl, tr, top, invScale * 2); // top
+        recur(mesh, shader, bl,     bottom, tl,  invScale * 2); // bottom left
+        recur(mesh, shader, bottom, br,     tr,  invScale * 2); // bottom right
+        recur(mesh, shader, tl,     tr,     top, invScale * 2); // top
     }
 }
