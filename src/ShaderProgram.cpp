@@ -102,6 +102,21 @@ void ShaderProgram::addTexture(const Texture* texture, const std::string& name) 
     addUniform1i(name, texture->getSlot());
 }
 
+void ShaderProgram::addUniform1f(const std::string& name, float v0) {
+    bind();
+    glUniform1f(getUniformLocation(name), v0);
+}
+
+void ShaderProgram::addUniform2f(const std::string& name, float v0, float v1) {
+    bind();
+    glUniform2f(getUniformLocation(name), v0, v1);
+}
+
+void ShaderProgram::addUniform3f(const std::string& name, float v0, float v1, float v2) {
+    bind();
+    glUniform3f(getUniformLocation(name), v0, v1, v2);
+}
+
 void ShaderProgram::addUniform4f(const std::string& name, float v0, float v1, float v2, float v3) {
     bind();
     glUniform4f(getUniformLocation(name), v0, v1, v2, v3);
