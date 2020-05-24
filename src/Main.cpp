@@ -9,6 +9,7 @@
 
 #include <iostream>
 #include <string>
+#include <cmath>
 
 unsigned int scrWidth = 800;
 unsigned int scrHeight = 600;
@@ -20,6 +21,12 @@ const std::string FRAGMENT_SHADER2 = "res/shaders/fragment2.glsl";
 
 const std::string FACE_TEXTURE = "res/textures/face.png";
 const std::string SHELF_TEXTURE = "res/textures/container.jpg";
+const std::string GRADIENT_TEXTURE = "res/textures/gradient.png";
+const std::string WALL_TEXTURE = "res/textures/wall.jpg";
+
+typedef std::pair<float, float> Point;
+Point avg(const Point& p1, const Point& p2);
+void recur(const Mesh& mesh, ShaderProgram* shader, Point bl, Point br, Point top, int invScale);
 
 // Whenever the window size changes, this callback function executes
 void framebuffer_size_callback(GLFWwindow* /* window */, int width, int height) {
@@ -41,7 +48,7 @@ void processInput(GLFWwindow* window) {
 int main() {
     // initialize GLFW
     if (!glfwInit()) {
-        std::cout << "Failed to initialize GLFW\n";
+        std::cerr << "Failed to initialize GLFW\n";
         return -1;
     }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -76,32 +83,24 @@ int main() {
     std::cout << "OpenGL version: " << glGetString(GL_VERSION) << '\n';
 
     const float VBData[] = {
-        //    position               color        texture coords
-        -0.9f, -0.9f, 0.0f,    1.0f, 0.0f, 0.0f,    0.0f, 0.0f, 
-         0.9f, -0.9f, 0.0f,    0.0f, 1.0f, 0.0f,    1.0f, 0.0f,
-        -0.9f,  0.9f, 0.0f,    0.0f, 0.0f, 1.0f,    0.0f, 1.0f,
-         0.9f,  0.9f, 0.0f,    1.0f, 1.0f, 0.0f,    1.0f, 1.0f,
+          170.0f, 294.4486f, 0.0f,  0.0f, 1.0f, 0.0f,  0.5f, 0.5f,
+         -170.0f, 294.4486f, 0.0f,  1.0f, 0.0f, 0.0f,  0.0f, 0.5f,
+            0.0f,   0.0f,    0.0f,  0.0f, 0.0f, 1.0f,  0.5f, 0.0f,
     };
 
     const unsigned int VBIndeces[] = {
-        0, 1, 3,
-        0, 2, 3,
+        0, 1, 2
     };
 
     ShaderProgram shader({ VERTEX_SHADER, FRAGMENT_SHADER1 });
-
     Mesh mesh(VBData, sizeof(VBData), { 3, 3, 2 });
     mesh.addSubmesh(VBIndeces, sizeof(VBIndeces) / sizeof(unsigned int), &shader);
 
-    const int FACE_TEXTURE_SLOT = 0;
-    const int SHELF_TEXTURE_SLOT = 1;
-    Texture face(FACE_TEXTURE, FACE_TEXTURE_SLOT);
-    Texture shelf(SHELF_TEXTURE, SHELF_TEXTURE_SLOT);
-    shader.addTexture(&face, "u_texture_face");
-    shader.addTexture(&shelf, "u_texture_shelf");
-
     // set clear color (background color)
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+
+    Texture gradient(GRADIENT_TEXTURE, 0);
+    shader.addTexture(&gradient, "u_texture_gradient");
 
     // draw only the outlines of the triangles
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -112,19 +111,12 @@ int main() {
         // clear the screen
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // projection matrix
-        glm::mat4 proj = glm::mat4(1.0f);
-        // move down and to the right
-        proj = glm::translate(proj, glm::vec3(0.5f, -0.5f, 0.0f));
-        // rotate vertices around the z axis
-        // the vector (should be a unit vector) is the translation axis
-        proj = glm::rotate(proj, static_cast<float>(glfwGetTime()), glm::vec3(0.0f, 0.0f, 1.0f));
-        // scale all axes by 1/2
-        proj = glm::scale(proj, glm::vec3(0.5f, 0.5f, 0.5f));
-        // give matrix to shaders
-        shader.addUniformMat4f("u_trans", proj);
+        float x = (1.0f + static_cast<float>(std::sin(glfwGetTime()))) / 4.0f;
+        float y = (1.0f + static_cast<float>(std::cos(glfwGetTime()))) / 4.0f;
+        shader.addUniform1f("u_offsetX", x);
+        shader.addUniform1f("u_offsetY", y);
 
-        mesh.render();
+        recur(mesh, &shader, Point(60.0f, 0.0f), Point(740.0f, 0.0f), Point(400.0f, 588.897f), 1);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -134,4 +126,40 @@ int main() {
     glfwTerminate();
 
     return 0;
+}
+
+Point avg(const Point& p1, const Point& p2) {
+    return Point((p1.first + p2.first) / 2.0f, (p1.second + p2.second) / 2.0f);
+}
+
+// Method to render equailateral triangles to form the Sierpinski triangle fractal
+// bl, br, and top form an equilateral triangle
+// bl = the bottom left point
+// br = the bottom right point
+// top = the top point
+void recur(const Mesh& mesh, ShaderProgram* shader, Point bl, Point br, Point top, int invScale) {
+    if (invScale < 128) {
+        // the 3 midpoints along the edges of the triangle made from bl, br, and top
+        // this triangle is upside down and inside the triangle made from bl, br, and top
+        Point tl = avg(top, bl);    // the top left point
+        Point tr = avg(top, br);    // the top left point
+        Point bottom = avg(bl, br); // the bottom point
+
+        glm::mat4 proj = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f);
+        // the vertex positions are set up so that the bottom point is (0, 0)
+        proj = glm::translate(proj, glm::vec3(bottom.first, bottom.second, 0.0f));
+        // scale by 0.5 for each new level of triangles
+        float scale = 1.0f / static_cast<float>(invScale);
+        proj = glm::scale(proj, glm::vec3(scale, scale, scale));
+        shader->addUniformMat4f("u_trans", proj);
+
+        mesh.render();
+
+        // bottom left
+        recur(mesh, shader, bl, bottom, tl, invScale * 2); // bottom left
+        // bottom right
+        recur(mesh, shader, bottom, br, tr, invScale * 2); // bottom right
+        // top
+        recur(mesh, shader, tl, tr, top, invScale * 2); // top
+    }
 }
