@@ -78,41 +78,41 @@ int main() {
     std::cout << "OpenGL version: " << glGetString(GL_VERSION) << '\n';
 
     const float VBData[] = {
-         // front
-        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,    1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,    0.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,    1.0f, 1.0f,
+        // front
+       -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,
+        0.5f, -0.5f,  0.5f,    1.0f, 0.0f,
+       -0.5f,  0.5f,  0.5f,    0.0f, 1.0f,
+        0.5f,  0.5f,  0.5f,    1.0f, 1.0f,
 
-         // left
-        -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,    1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,    1.0f, 1.0f,
+        // left
+       -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,
+       -0.5f, -0.5f,  0.5f,    1.0f, 0.0f,
+       -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
+       -0.5f,  0.5f,  0.5f,    1.0f, 1.0f,
 
-         // right
-         0.5f, -0.5f,  0.5f,    0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,    1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,    0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
+       // right
+       0.5f, -0.5f,  0.5f,    0.0f, 0.0f,
+       0.5f, -0.5f, -0.5f,    1.0f, 0.0f,
+       0.5f,  0.5f,  0.5f,    0.0f, 1.0f,
+       0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
 
-         // back
-         0.5f, -0.5f, -0.5f,    0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,    1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
+       // back
+       0.5f, -0.5f, -0.5f,    0.0f, 0.0f,
+      -0.5f, -0.5f, -0.5f,    1.0f, 0.0f,
+       0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
+      -0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
 
-         // top
-        -0.5f,  0.5f,  0.5f,    0.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
+      // top
+     -0.5f,  0.5f,  0.5f,    0.0f, 0.0f,
+      0.5f,  0.5f,  0.5f,    1.0f, 0.0f,
+     -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
+      0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
 
-         // bottom
-        -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,    1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,    0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,    1.0f, 1.0f,
+      // bottom
+     -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,
+      0.5f, -0.5f, -0.5f,    1.0f, 0.0f,
+     -0.5f, -0.5f,  0.5f,    0.0f, 1.0f,
+      0.5f, -0.5f,  0.5f,    1.0f, 1.0f,
     };
 
     const unsigned int VBIndeces[] = {
@@ -143,6 +143,19 @@ int main() {
     double previousTime = glfwGetTime();
     double totalFrames = 0, seconds = 0;
     int FPS = 0;
+
+    glm::vec3 cubePositions[] = {
+        glm::vec3(0.0f,  0.0f,  -5.0f),
+        glm::vec3(2.0f,  5.0f, -15.0f),
+        glm::vec3(-1.5f, -2.2f, -2.5f),
+        glm::vec3(-3.8f, -2.0f, -12.3f),
+        glm::vec3(2.4f, -0.4f, -3.5f),
+        glm::vec3(-1.7f,  3.0f, -7.5f),
+        glm::vec3(1.3f, -2.0f, -2.5f),
+        glm::vec3(1.5f,  2.0f, -2.5f),
+        glm::vec3(1.5f,  0.2f, -1.5f),
+        glm::vec3(-1.3f,  1.0f, -1.5f)
+    };
     
     // render loop
     while (!glfwWindowShouldClose(window)) {
@@ -150,17 +163,17 @@ int main() {
         // clear the screen and the depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // the MVP matrices
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::rotate(model, static_cast<float>(glfwGetTime()), glm::vec3(9.0f, 6.0f, 0.0f));
-        glm::mat4 view = glm::mat4(1.0f);
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-        glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
-        shader.addUniformMat4f("u_model", model);
-        shader.addUniformMat4f("u_view", view);
-        shader.addUniformMat4f("u_projection", projection);
-
-        mesh.render();
+        for (int i = 0; i < 10; ++i) {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::rotate(model, static_cast<float>(glfwGetTime()), glm::vec3(9.0f, 6.0f, 0.0f));
+            glm::mat4 view = glm::mat4(1.0f);
+            view = glm::translate(view, cubePositions[i]);
+            glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+            shader.addUniformMat4f("u_model", model);
+            shader.addUniformMat4f("u_view", view);
+            shader.addUniformMat4f("u_projection", projection);
+            mesh.render();
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();
