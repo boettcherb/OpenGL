@@ -96,11 +96,14 @@ int main() {
     Mesh mesh(VBData, sizeof(VBData), { 3, 3, 2 });
     mesh.addSubmesh(VBIndeces, sizeof(VBIndeces) / sizeof(unsigned int), &shader);
 
-    // set clear color (background color)
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-
     Texture gradient(GRADIENT_TEXTURE, 0);
     shader.addTexture(&gradient, "u_texture_gradient");
+
+    // draw over objects further away, but not over closer objects
+    glEnable(GL_DEPTH_TEST);
+
+    // set clear color (background color)
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
     // draw only the outlines of the triangles
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -113,8 +116,8 @@ int main() {
     // render loop
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
-        // clear the screen
-        glClear(GL_COLOR_BUFFER_BIT);
+        // clear the screen and the depth buffer
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         float x = (1.0f + static_cast<float>(std::sin(glfwGetTime()))) / 4.0f;
         float y = (1.0f + static_cast<float>(std::cos(glfwGetTime()))) / 4.0f;
