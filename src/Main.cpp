@@ -40,6 +40,23 @@ void processInput(GLFWwindow* window) {
     }
 }
 
+// print the FPS to the screen every second
+static void displayFPS() {
+    static double FPS = 0;
+    static double seconds = 0;
+    static double totalFrames = 0;
+    static double previousTime = glfwGetTime();
+    double currentTime = glfwGetTime();
+    FPS++;
+    if (currentTime - previousTime >= 1.0) {
+        ++seconds;
+        totalFrames += FPS;
+        std::cout << "FPS: " << FPS << ", average FPS: " << totalFrames / seconds << '\n';
+        FPS = 0;
+        previousTime = currentTime;
+    }
+}
+
 int main() {
     // initialize GLFW
     if (!glfwInit()) {
@@ -159,7 +176,9 @@ int main() {
     
     // render loop
     while (!glfwWindowShouldClose(window)) {
+        displayFPS();
         processInput(window);
+
         // clear the screen and the depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -177,17 +196,6 @@ int main() {
 
         glfwSwapBuffers(window);
         glfwPollEvents();
-        
-        // FPS counter
-        double currentTime = glfwGetTime();
-        FPS++;
-        if (currentTime - previousTime >= 1.0) {
-            ++seconds;
-            totalFrames += FPS;
-            std::cout << "FPS: " << FPS << ", average FPS: " << totalFrames / seconds << '\n';
-            FPS = 0;
-            previousTime = currentTime;
-        }
     }
     
     // clean up
