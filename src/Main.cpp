@@ -9,7 +9,6 @@
 
 #include <iostream>
 #include <string>
-#include <cmath>
 
 unsigned int scrWidth = 800;
 unsigned int scrHeight = 600;
@@ -23,10 +22,6 @@ const std::string FACE_TEXTURE = "res/textures/face.png";
 const std::string SHELF_TEXTURE = "res/textures/container.jpg";
 const std::string GRADIENT_TEXTURE = "res/textures/gradient.png";
 const std::string WALL_TEXTURE = "res/textures/wall.jpg";
-
-typedef std::pair<float, float> Point;
-Point avg(const Point& p1, const Point& p2);
-void recur(const Mesh& mesh, ShaderProgram* shader, Point bl, Point br, Point top, int invScale);
 
 // Whenever the window size changes, this callback function executes
 void framebuffer_size_callback(GLFWwindow* /* window */, int width, int height) {
@@ -68,7 +63,7 @@ int main() {
     glfwMakeContextCurrent(window);
 
     // Tie the buffer swap rate (the FPS) to your monitor's refresh rate
-    // glfwSwapInterval(1);
+    glfwSwapInterval(1);
 
     // call the framebuffer_size_callback function when the window is resized
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -83,30 +78,66 @@ int main() {
     std::cout << "OpenGL version: " << glGetString(GL_VERSION) << '\n';
 
     const float VBData[] = {
-          170.0f, 294.4486f, 0.0f,  0.0f, 1.0f, 0.0f,  0.5f, 0.5f,
-         -170.0f, 294.4486f, 0.0f,  1.0f, 0.0f, 0.0f,  0.0f, 0.5f,
-            0.0f,   0.0f,    0.0f,  0.0f, 0.0f, 1.0f,  0.5f, 0.0f,
+         // front
+        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,    1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,    0.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,    1.0f, 1.0f,
+
+         // left
+        -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,    1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,    1.0f, 1.0f,
+
+         // right
+         0.5f, -0.5f,  0.5f,    0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,    1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,    0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
+
+         // back
+         0.5f, -0.5f, -0.5f,    0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,    1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
+
+         // top
+        -0.5f,  0.5f,  0.5f,    0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
+
+         // bottom
+        -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,    1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,    0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,    1.0f, 1.0f,
     };
 
     const unsigned int VBIndeces[] = {
-        0, 1, 2
+         0,  2,  3,  0,  3,  1,
+         4,  6,  7,  4,  7,  5,
+         8, 10, 11,  8, 11,  9,
+        12, 14, 15, 12, 15, 13,
+        16, 18, 19, 16, 19, 17,
+        20, 22, 23, 20, 23, 21,
     };
 
     ShaderProgram shader({ VERTEX_SHADER, FRAGMENT_SHADER1 });
-    Mesh mesh(VBData, sizeof(VBData), { 3, 3, 2 });
+    Mesh mesh(VBData, sizeof(VBData), { 3, 2 });
     mesh.addSubmesh(VBIndeces, sizeof(VBIndeces) / sizeof(unsigned int), &shader);
 
-    Texture gradient(GRADIENT_TEXTURE, 0);
-    shader.addTexture(&gradient, "u_texture_gradient");
+    Texture shelf(SHELF_TEXTURE, 0u);
+    Texture face(FACE_TEXTURE, 1u);
+    shader.addTexture(&shelf, "u_texture_shelf");
+    shader.addTexture(&face, "u_texture_face");
 
     // draw over objects further away, but not over closer objects
     glEnable(GL_DEPTH_TEST);
 
     // set clear color (background color)
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-
-    // draw only the outlines of the triangles
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // variables for the FPS counter
     double previousTime = glfwGetTime();
@@ -119,11 +150,17 @@ int main() {
         // clear the screen and the depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        float x = (1.0f + static_cast<float>(std::sin(glfwGetTime()))) / 4.0f;
-        float y = (1.0f + static_cast<float>(std::cos(glfwGetTime()))) / 4.0f;
-        shader.addUniform1f("u_offsetX", x);
-        shader.addUniform1f("u_offsetY", y);
-        recur(mesh, &shader, Point(60.0f, 0.0f), Point(740.0f, 0.0f), Point(400.0f, 588.897f), 1);
+        // the MVP matrices
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::rotate(model, static_cast<float>(glfwGetTime()), glm::vec3(9.0f, 6.0f, 0.0f));
+        glm::mat4 view = glm::mat4(1.0f);
+        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+        glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+        shader.addUniformMat4f("u_model", model);
+        shader.addUniformMat4f("u_view", view);
+        shader.addUniformMat4f("u_projection", projection);
+
+        mesh.render();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -144,37 +181,4 @@ int main() {
     glfwTerminate();
 
     return 0;
-}
-
-Point avg(const Point& p1, const Point& p2) {
-    return Point((p1.first + p2.first) / 2.0f, (p1.second + p2.second) / 2.0f);
-}
-
-// Method to render equailateral triangles to form the Sierpinski triangle fractal
-// bl, br, and top form an equilateral triangle
-// bl = the bottom left point
-// br = the bottom right point
-// top = the top point
-void recur(const Mesh& mesh, ShaderProgram* shader, Point bl, Point br, Point top, int invScale) {
-    if (invScale <= 64) {
-        // the 3 midpoints along the edges of the triangle made from bl, br, and top
-        // this triangle is upside down and inside the triangle made from bl, br, and top
-        Point tl = avg(top, bl);    // the top left point
-        Point tr = avg(top, br);    // the top left point
-        Point bottom = avg(bl, br); // the bottom point
-
-        glm::mat4 proj = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f -1.0f, 1.0f);
-        // the vertex positions are set up so that the bottom point is (0, 0)
-        proj = glm::translate(proj, glm::vec3(bottom.first, bottom.second, 0.0f));
-        // scale by 0.5 for each new level of triangles
-        float scale = 1.0f / static_cast<float>(invScale);
-        proj = glm::scale(proj, glm::vec3(scale, scale, 1.0f));
-        shader->addUniformMat4f("u_trans", proj);
-
-        mesh.render();
-
-        recur(mesh, shader, bl,     bottom, tl,  invScale * 2); // bottom left
-        recur(mesh, shader, bottom, br,     tr,  invScale * 2); // bottom right
-        recur(mesh, shader, tl,     tr,     top, invScale * 2); // top
-    }
 }

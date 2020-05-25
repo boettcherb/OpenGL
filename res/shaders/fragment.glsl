@@ -5,11 +5,11 @@ out vec4 color;
 
 in vec2 v_texCoord;
 
-uniform float u_offsetX;
-uniform float u_offsetY;
-uniform sampler2D u_texture_gradient;
+uniform sampler2D u_texture_shelf;
+uniform sampler2D u_texture_face;
 
 void main() {
-    vec2 final = vec2(v_texCoord.x + u_offsetX, v_texCoord.y + u_offsetY);
-    color = texture(u_texture_gradient, final);
+    vec4 shelf = texture(u_texture_shelf, v_texCoord);
+    vec4 face = texture(u_texture_face, v_texCoord);
+    color = mix(shelf, face, 0.2f);
 }
