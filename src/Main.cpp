@@ -121,6 +121,16 @@ int main() {
 
     std::cout << "OpenGL version: " << glGetString(GL_VERSION) << '\n';
 
+    // draw over objects further away, but not over closer objects
+    glEnable(GL_DEPTH_TEST);
+
+    // don't render the back faces of triangles
+    // the back face has vertices with a clockwise winding order
+    glEnable(GL_CULL_FACE);
+
+    // set clear color (background color)
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+
     const float VBData[] = {
          // front
         -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,
@@ -160,12 +170,12 @@ int main() {
     };
 
     const unsigned int VBIndeces[] = {
-         0,  2,  3,  0,  3,  1,
-         4,  6,  7,  4,  7,  5,
-         8, 10, 11,  8, 11,  9,
-        12, 14, 15, 12, 15, 13,
-        16, 18, 19, 16, 19, 17,
-        20, 22, 23, 20, 23, 21,
+         0,  3,  2,  0,  1,  3,
+         4,  7,  6,  4,  5,  7,
+         8, 11, 10,  8,  9, 11,
+        12, 15, 14, 12, 13, 15,
+        16, 19, 18, 16, 17, 19,
+        20, 23, 22, 20, 21, 23,
     };
 
     ShaderProgram shader({ VERTEX_SHADER, FRAGMENT_SHADER1 });
@@ -176,12 +186,6 @@ int main() {
     Texture face(FACE_TEXTURE, 1u);
     shader.addTexture(&shelf, "u_texture_shelf");
     shader.addTexture(&face, "u_texture_face");
-
-    // draw over objects further away, but not over closer objects
-    glEnable(GL_DEPTH_TEST);
-
-    // set clear color (background color)
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
     // variables for deltaTime
     double previousTime = glfwGetTime();
