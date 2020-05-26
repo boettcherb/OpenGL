@@ -58,16 +58,12 @@ static void processInput(GLFWwindow* window, float deltaTime) {
 
 // print the FPS to the screen every second
 static void displayFPS() {
-    static double FPS = 0;
-    static double seconds = 0;
-    static double totalFrames = 0;
+    static int FPS = 0;
     static double previousTime = glfwGetTime();
     double currentTime = glfwGetTime();
-    FPS++;
+    ++FPS;
     if (currentTime - previousTime >= 1.0) {
-        ++seconds;
-        totalFrames += FPS;
-        std::cout << "FPS: " << FPS << ", average FPS: " << totalFrames / seconds << '\n';
+        std::cout << "FPS: " << FPS << '\n';
         FPS = 0;
         previousTime = currentTime;
     }
