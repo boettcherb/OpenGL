@@ -1,6 +1,7 @@
 #include "ShaderProgram.h"
 #include "Mesh.h"
 #include "Texture.h"
+#include "Camera.h"
 
 #include <glad/glad.h>
 #include <GLFW/GLFW3.h>
@@ -9,10 +10,9 @@
 
 #include <iostream>
 #include <string>
-#include <cmath>
 
-unsigned int scrWidth = 800;
-unsigned int scrHeight = 600;
+static unsigned int scrWidth = 800;
+static unsigned int scrHeight = 600;
 const char* SCR_TITLE = "OpenGL Window";
 
 const std::string VERTEX_SHADER = "res/shaders/vertex.glsl";
@@ -24,17 +24,25 @@ const std::string SHELF_TEXTURE = "res/textures/container.jpg";
 const std::string GRADIENT_TEXTURE = "res/textures/gradient.png";
 const std::string WALL_TEXTURE = "res/textures/wall.jpg";
 
-glm::vec3 g_cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 g_cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 g_cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+static Camera g_camera;
 
-// Whenever the window size changes, this callback function executes
+// This callback function executes whenever the window size changes
 static void framebuffer_size_callback(GLFWwindow* /* window */, int width, int height) {
     scrWidth = width;
     scrHeight = height;
 
     // tell OpenGL the new dimensions of the window
     glViewport(0, 0, width, height);
+}
+
+// This callback function executes whenever the user moves the mouse
+void mouse_callback(GLFWwindow* /* window */, double xpos, double ypos) {
+    g_camera.processMouseMovement(static_cast<float>(xpos), static_cast<float>(ypos));
+}
+
+// This callback function executes whenever the user moves the mouse scroll wheel
+void scroll_callback(GLFWwindow* /* window */, double /* offsetX */, double offsetY) {
+    g_camera.processMouseScroll(static_cast<float>(offsetY));
 }
 
 // Called every frame inside the render loop
@@ -46,14 +54,18 @@ static void processInput(GLFWwindow* window, float deltaTime) {
 
     // WASD for the camera
     const float cameraSpeed = 2.5f * deltaTime;
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        g_cameraPos += g_cameraFront * cameraSpeed;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        g_cameraPos -= g_cameraFront * cameraSpeed;
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        g_cameraPos -= glm::normalize(glm::cross(g_cameraFront, g_cameraUp)) * cameraSpeed;
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        g_cameraPos += glm::normalize(glm::cross(g_cameraFront, g_cameraUp)) * cameraSpeed;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        g_camera.processKeyboard(Camera::FORWARD, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        g_camera.processKeyboard(Camera::BACKWARD, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        g_camera.processKeyboard(Camera::LEFT, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        g_camera.processKeyboard(Camera::RIGHT, deltaTime);
+    }
 }
 
 // print the FPS to the screen every second
@@ -90,12 +102,15 @@ int main() {
         return -1;
     }
     glfwMakeContextCurrent(window);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
+
+    // tell GLFW to capture our mouse
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // Tie the buffer swap rate (the FPS) to your monitor's refresh rate
     glfwSwapInterval(1);
-
-    // call the framebuffer_size_callback function when the window is resized
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     // initialize GLAD
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
@@ -174,24 +189,26 @@ int main() {
     
     // render loop
     while (!glfwWindowShouldClose(window)) {
-        displayFPS();
-
         // calculate deltaTime and process input
         double currentTime = glfwGetTime();
         deltaTime = currentTime - previousTime;
         previousTime = currentTime;
         processInput(window, static_cast<float>(deltaTime));
 
+        displayFPS();
+
         // clear the screen and the depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // the MVP matrices
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::rotate(model, static_cast<float>(glfwGetTime()), glm::vec3(9.0f, 6.0f, 0.0f));
-        glm::mat4 view = glm::lookAt(g_cameraPos, g_cameraPos + g_cameraFront, g_cameraUp);
-        glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
         shader.addUniformMat4f("u_model", model);
+        
+        glm::mat4 view = g_camera.getViewMatrix();
         shader.addUniformMat4f("u_view", view);
+
+        float scrRatio = static_cast<float>(scrWidth) / static_cast<float>(scrHeight);
+        glm::mat4 projection = glm::perspective(glm::radians(g_camera.getZoom()), scrRatio, 0.1f, 100.0f);
         shader.addUniformMat4f("u_projection", projection);
 
         mesh.render();
