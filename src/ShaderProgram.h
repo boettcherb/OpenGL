@@ -12,10 +12,9 @@
 class ShaderProgram {
 
 	struct Shader {
-		unsigned int m_type;
 		unsigned int m_id;
 		std::string m_source;
-		Shader(unsigned int type, unsigned int id, const std::string& source);
+		Shader(unsigned int id, const std::string& source);
 	};
 
 	std::vector<Shader> m_shaders;
@@ -23,7 +22,7 @@ class ShaderProgram {
 	std::unordered_map<std::string, int> m_uniformLocationCache;
 
 public:
-	ShaderProgram(const std::vector<std::string>& filePaths);
+	ShaderProgram(const std::string& vertexFilePath, const std::string& fragmentFilePath);
 	~ShaderProgram();
 
 	void bind() const;
@@ -39,8 +38,7 @@ public:
 
 private:
 	void compileAndLink() const;
-	std::pair<unsigned int, std::string> parseShader(const std::string& filePath) const;
-	unsigned int getShaderType(const std::string& line) const;
+	std::string parseShader(const std::string& filePath) const;
 	int getUniformLocation(const std::string& name);
 };
 

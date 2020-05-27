@@ -11,21 +11,17 @@
 #include <vector>
 #include <unordered_map>
 
-ShaderProgram::Shader::Shader(unsigned int type, unsigned int id, const std::string& source)
-    : m_type{ type }, m_id{ id }, m_source{ source } {}
+ShaderProgram::Shader::Shader(unsigned int id, const std::string& source)
+    : m_id{ id }, m_source{ source } {}
 
-ShaderProgram::ShaderProgram(const std::vector<std::string>& filePaths) {
+ShaderProgram::ShaderProgram(const std::string& vertexFilePath, const std::string& fragmentFilePath) {
 	m_shaderProgramID = glCreateProgram();
-    for (const std::string& filePath : filePaths) {
-        // first = type, second = source
-        std::pair<unsigned int, std::string> shaderData = parseShader(filePath);
-        unsigned int id = glCreateShader(shaderData.first);
-	    m_shaders.emplace_back(shaderData.first, id, shaderData.second);
-    }
+    m_shaders.emplace_back(glCreateShader(GL_VERTEX_SHADER), parseShader(vertexFilePath));
+    m_shaders.emplace_back(glCreateShader(GL_FRAGMENT_SHADER), parseShader(fragmentFilePath));
     compileAndLink();
 
     // the individual shaders are not needed after they have been linked into one program
-    for (const auto& shader : m_shaders) {
+    for (const Shader& shader : m_shaders) {
         glDeleteShader(shader.m_id);
     }
 }
@@ -35,19 +31,21 @@ ShaderProgram::~ShaderProgram() {
 }
 
 void ShaderProgram::compileAndLink() const {
-    int success;
-    for (const auto& shader : m_shaders) {
+    int success = 0;
+    for (const Shader& shader : m_shaders) {
         const char* src = shader.m_source.c_str();
         glShaderSource(shader.m_id, 1, &src, nullptr);
         glCompileShader(shader.m_id);
 
         // make sure the shader compiled successfully
-        char infoLog[512] = { 0 };
         glGetShaderiv(shader.m_id, GL_COMPILE_STATUS, &success);
         if (!success) {
+            char infoLog[512] = { 0 };
             glGetShaderInfoLog(shader.m_id, 512, nullptr, infoLog);
             std::cerr << "Shader Compilation Failed\n" << infoLog << '\n';
         }
+
+        // combine each individual shader into one program
         glAttachShader(m_shaderProgramID, shader.m_id);
     }
 
@@ -61,31 +59,18 @@ void ShaderProgram::compileAndLink() const {
     }
 }
 
-std::pair<unsigned int, std::string> ShaderProgram::parseShader(const std::string& filePath) const {
+std::string ShaderProgram::parseShader(const std::string& filePath) const {
     std::ifstream stream(filePath);
-    std::string shader, line;
-    getline(stream, line);
-    unsigned int type = getShaderType(line);
-    while (getline(stream, line)) {
-        shader.append(line + '\n');
+    if (!stream) {
+        std::cerr << "Could not find/open shader file at" << filePath << '\n';
     }
-    return { type, shader };
-}
-
-unsigned int ShaderProgram::getShaderType(const std::string& line) const {
-    // At the beginning of the each shader file, place a comment with the shader type
-    // Ex: // VERTEX
-    const int headerTypeOffset = 3; // The 3 chars before the shader type
-    if (line.length() >= headerTypeOffset) {
-        if (line.substr(headerTypeOffset) == "VERTEX") {
-            return GL_VERTEX_SHADER;
-        } else if (line.substr(headerTypeOffset) == "FRAGMENT") {
-            return GL_FRAGMENT_SHADER;
-        }
+    std::string shaderSource;
+    while (stream) {
+        std::string line;
+        std::getline(stream, line);
+        shaderSource.append(line + '\n');
     }
-    std::cerr << "Invalid Shader Header. Place a comment at the top of your shader files "
-                 "with the shader type.\nEx: // VERTEX\n";
-    return 0;
+    return shaderSource;
 }
 
 void ShaderProgram::bind() const {
