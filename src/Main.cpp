@@ -21,7 +21,7 @@ const std::string LIGHT_SOURCE_VS = "res/shaders/lightSource_vertex.glsl";
 const std::string LIGHT_SOURCE_FS = "res/shaders/lightSource_fragment.glsl";
 
 // create camera object with initial position
-static Camera g_camera(glm::vec3(0.0f, 0.0f, 3.0f));
+static Camera g_camera(glm::vec3(0.0f, 0.0f, 4.0f));
 
 // This callback function executes whenever the window size changes
 static void framebuffer_size_callback(GLFWwindow* /* window */, int width, int height) {
@@ -202,7 +202,6 @@ int main() {
     const int NUM_INDICES = sizeof(CUBE_INDICES) / sizeof(unsigned int);
 
     // light source
-    const glm::vec3 LIGHT_POS = glm::vec3(1.5f, 1.0f, -1.3f);
     ShaderProgram lightSourceShader(LIGHT_SOURCE_VS, LIGHT_SOURCE_FS);
     Mesh lightSourceMesh(CUBE_DATA, sizeof(CUBE_DATA), { 3 });
     lightSourceMesh.addSubmesh(CUBE_INDICES, NUM_INDICES, &lightSourceShader);
@@ -211,7 +210,6 @@ int main() {
     ShaderProgram coloredCubeShader(COLORED_CUBE_VS, COLORED_CUBE_FS);
     coloredCubeShader.addUniform3f("u_objectColor", 1.0f, 0.5f, 0.31f);
     coloredCubeShader.addUniform3f("u_lightColor", 1.0f, 1.0f, 1.0f);
-    coloredCubeShader.addUniform3f("u_lightPos", LIGHT_POS.x, LIGHT_POS.y, LIGHT_POS.z);
     Mesh coloredCubeMesh(CUBE_DATA2, sizeof(CUBE_DATA2), { 3, 3 });
     coloredCubeMesh.addSubmesh(CUBE_INDICES, NUM_INDICES, &coloredCubeShader);
 
@@ -231,10 +229,17 @@ int main() {
 
         // clear the screen and the depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        float x = static_cast<float>(glm::sin(glfwGetTime())) * 2.0f;
+        float z = static_cast<float>(glm::cos(glfwGetTime())) * 2.0f;
+        glm::vec3 lightPos = glm::vec3(x, 0.0f, z);
+        coloredCubeShader.addUniform3f("u_lightPos", lightPos.x, lightPos.y, lightPos.z);
 
         glm::mat4 model = glm::mat4(1.0f);
+        model = glm::rotate(model, glm::radians(30.0f), glm::normalize(glm::vec3(2 * x, z, 2.0f)));
         coloredCubeShader.addUniformMat4f("u_model", model);
-        model = glm::translate(model, LIGHT_POS);
+        
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, lightPos);
         model = glm::scale(model, glm::vec3(0.2f));
         lightSourceShader.addUniformMat4f("u_model", model);
         
