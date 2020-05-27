@@ -22,6 +22,7 @@ public:
 	void processKeyboard(CameraMovement direction, float deltaTime);
 	void processMouseMovement(float mouseX, float mouseY);
 	void processMouseScroll(float offsetY);
+	glm::vec3 getCameraPosition() const;
 	float getZoom() const;
 
 private:

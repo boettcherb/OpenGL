@@ -52,6 +52,10 @@ void Camera::processMouseScroll(float offsetY) {
     m_zoom = std::clamp(m_zoom, 1.0f, 45.0f);
 }
 
+glm::vec3 Camera::getCameraPosition() const {
+    return m_position;
+}
+
 float Camera::getZoom() const {
     return m_zoom;
 }
