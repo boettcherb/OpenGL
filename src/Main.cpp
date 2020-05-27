@@ -21,7 +21,7 @@ const std::string LIGHT_SOURCE_VS = "res/shaders/lightSource_vertex.glsl";
 const std::string LIGHT_SOURCE_FS = "res/shaders/lightSource_fragment.glsl";
 
 // create camera object with initial position
-static Camera g_camera(glm::vec3(0.0f, 0.0f, 4.0f));
+static Camera g_camera(glm::vec3(0.0f, 0.65f, 4.0f));
 
 // This callback function executes whenever the window size changes
 static void framebuffer_size_callback(GLFWwindow* /* window */, int width, int height) {
@@ -229,16 +229,17 @@ int main() {
 
         // clear the screen and the depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        float x = static_cast<float>(glm::sin(glfwGetTime())) * 2.0f;
-        float z = static_cast<float>(glm::cos(glfwGetTime())) * 2.0f;
-        glm::vec3 lightPos = glm::vec3(x, 0.0f, z);
+
+        const glm::vec3 viewPos = g_camera.getCameraPosition();
+        coloredCubeShader.addUniform3f("u_viewPos", viewPos.x, viewPos.y, viewPos.z);
+        float x = glm::sin(static_cast<float>(glfwGetTime())) * 2.0f;
+        float z = glm::cos(static_cast<float>(glfwGetTime())) * 2.0f;
+        glm::vec3 lightPos = glm::vec3(x, 1.0f, z);
         coloredCubeShader.addUniform3f("u_lightPos", lightPos.x, lightPos.y, lightPos.z);
 
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::rotate(model, glm::radians(30.0f), glm::normalize(glm::vec3(2 * x, z, 2.0f)));
         coloredCubeShader.addUniformMat4f("u_model", model);
         
-        model = glm::mat4(1.0f);
         model = glm::translate(model, lightPos);
         model = glm::scale(model, glm::vec3(0.2f));
         lightSourceShader.addUniformMat4f("u_model", model);
