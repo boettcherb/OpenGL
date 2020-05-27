@@ -125,9 +125,6 @@ int main() {
     // the back face has vertices with a clockwise winding order
     glEnable(GL_CULL_FACE);
 
-    // set clear color (background color)
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-
     const float CUBE_DATA[] = {
          // front
         -0.5f, -0.5f,  0.5f,
@@ -161,6 +158,39 @@ int main() {
          0.5f, -0.5f,  0.5f,
     };
 
+    const float CUBE_DATA2[] = {
+        // front
+       -0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f,
+        0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f,
+       -0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f,
+        0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f,
+        // left                            
+       -0.5f, -0.5f, -0.5f,  -1.0f,  0.0f,  0.0f,
+       -0.5f, -0.5f,  0.5f,  -1.0f,  0.0f,  0.0f,
+       -0.5f,  0.5f, -0.5f,  -1.0f,  0.0f,  0.0f,
+       -0.5f,  0.5f,  0.5f,  -1.0f,  0.0f,  0.0f,
+        // right                           
+        0.5f, -0.5f,  0.5f,   1.0f,  0.0f,  0.0f,
+        0.5f, -0.5f, -0.5f,   1.0f,  0.0f,  0.0f,
+        0.5f,  0.5f,  0.5f,   1.0f,  0.0f,  0.0f,
+        0.5f,  0.5f, -0.5f,   1.0f,  0.0f,  0.0f,
+        // back                     
+        0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,
+       -0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,
+        0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,
+       -0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,
+        // top                      
+       -0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f,
+        0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f,
+       -0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f,
+        0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f,
+        // bottom
+       -0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f,
+        0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f,
+       -0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f,
+        0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f,
+    };
+
     const unsigned int CUBE_INDICES[] = {
          0,  3,  2,  0,  1,  3,
          4,  7,  6,  4,  5,  7,
@@ -172,6 +202,7 @@ int main() {
     const int NUM_INDICES = sizeof(CUBE_INDICES) / sizeof(unsigned int);
 
     // light source
+    const glm::vec3 LIGHT_POS = glm::vec3(1.5f, 1.0f, -1.3f);
     ShaderProgram lightSourceShader(LIGHT_SOURCE_VS, LIGHT_SOURCE_FS);
     Mesh lightSourceMesh(CUBE_DATA, sizeof(CUBE_DATA), { 3 });
     lightSourceMesh.addSubmesh(CUBE_INDICES, NUM_INDICES, &lightSourceShader);
@@ -180,7 +211,8 @@ int main() {
     ShaderProgram coloredCubeShader(COLORED_CUBE_VS, COLORED_CUBE_FS);
     coloredCubeShader.addUniform3f("u_objectColor", 1.0f, 0.5f, 0.31f);
     coloredCubeShader.addUniform3f("u_lightColor", 1.0f, 1.0f, 1.0f);
-    Mesh coloredCubeMesh(CUBE_DATA, sizeof(CUBE_DATA), { 3 });
+    coloredCubeShader.addUniform3f("u_lightPos", LIGHT_POS.x, LIGHT_POS.y, LIGHT_POS.z);
+    Mesh coloredCubeMesh(CUBE_DATA2, sizeof(CUBE_DATA2), { 3, 3 });
     coloredCubeMesh.addSubmesh(CUBE_INDICES, NUM_INDICES, &coloredCubeShader);
 
     // variables for deltaTime
@@ -202,8 +234,8 @@ int main() {
 
         glm::mat4 model = glm::mat4(1.0f);
         coloredCubeShader.addUniformMat4f("u_model", model);
-        model = glm::translate(model, glm::vec3(3.0f, 2.0f, -3.0f));
-        model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+        model = glm::translate(model, LIGHT_POS);
+        model = glm::scale(model, glm::vec3(0.2f));
         lightSourceShader.addUniformMat4f("u_model", model);
         
         glm::mat4 view = g_camera.getViewMatrix();
