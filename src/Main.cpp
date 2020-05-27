@@ -15,16 +15,13 @@ static unsigned int scrWidth = 800;
 static unsigned int scrHeight = 600;
 const char* SCR_TITLE = "OpenGL Window";
 
-const std::string VERTEX_SHADER = "res/shaders/vertex.glsl";
-const std::string FRAGMENT_SHADER1 = "res/shaders/fragment.glsl";
-const std::string FRAGMENT_SHADER2 = "res/shaders/fragment2.glsl";
+const std::string COLORED_CUBE_VS = "res/shaders/coloredCube_vertex.glsl";
+const std::string COLORED_CUBE_FS = "res/shaders/coloredCube_fragment.glsl";
+const std::string LIGHT_SOURCE_VS = "res/shaders/lightSource_vertex.glsl";
+const std::string LIGHT_SOURCE_FS = "res/shaders/lightSource_fragment.glsl";
 
-const std::string FACE_TEXTURE = "res/textures/face.png";
-const std::string SHELF_TEXTURE = "res/textures/container.jpg";
-const std::string GRADIENT_TEXTURE = "res/textures/gradient.png";
-const std::string WALL_TEXTURE = "res/textures/wall.jpg";
-
-static Camera g_camera;
+// create camera object with initial position
+static Camera g_camera(glm::vec3(0.0f, 0.0f, 3.0f));
 
 // This callback function executes whenever the window size changes
 static void framebuffer_size_callback(GLFWwindow* /* window */, int width, int height) {
@@ -131,45 +128,40 @@ int main() {
     // set clear color (background color)
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
-    const float VBData[] = {
+    const float CUBE_DATA[] = {
          // front
-        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,    1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,    0.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,    1.0f, 1.0f,
-
+        -0.5f, -0.5f,  0.5f,
+         0.5f, -0.5f,  0.5f,
+        -0.5f,  0.5f,  0.5f,
+         0.5f,  0.5f,  0.5f,
          // left
-        -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,    1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,    1.0f, 1.0f,
-
+        -0.5f, -0.5f, -0.5f,
+        -0.5f, -0.5f,  0.5f,
+        -0.5f,  0.5f, -0.5f,
+        -0.5f,  0.5f,  0.5f,
          // right
-         0.5f, -0.5f,  0.5f,    0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,    1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,    0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
-
+         0.5f, -0.5f,  0.5f,
+         0.5f, -0.5f, -0.5f,
+         0.5f,  0.5f,  0.5f,
+         0.5f,  0.5f, -0.5f,
          // back
-         0.5f, -0.5f, -0.5f,    0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,    1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
-
+         0.5f, -0.5f, -0.5f,
+        -0.5f, -0.5f, -0.5f,
+         0.5f,  0.5f, -0.5f,
+        -0.5f,  0.5f, -0.5f,
          // top
-        -0.5f,  0.5f,  0.5f,    0.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
-
+        -0.5f,  0.5f,  0.5f,
+         0.5f,  0.5f,  0.5f,
+        -0.5f,  0.5f, -0.5f,
+         0.5f,  0.5f, -0.5f,
          // bottom
-        -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,    1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,    0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,    1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,
+         0.5f, -0.5f, -0.5f,
+        -0.5f, -0.5f,  0.5f,
+         0.5f, -0.5f,  0.5f,
     };
 
-    const unsigned int VBIndeces[] = {
+    const unsigned int CUBE_INDICES[] = {
          0,  3,  2,  0,  1,  3,
          4,  7,  6,  4,  5,  7,
          8, 11, 10,  8,  9, 11,
@@ -177,15 +169,19 @@ int main() {
         16, 19, 18, 16, 17, 19,
         20, 23, 22, 20, 21, 23,
     };
+    const int NUM_INDICES = sizeof(CUBE_INDICES) / sizeof(unsigned int);
 
-    ShaderProgram shader({ VERTEX_SHADER, FRAGMENT_SHADER1 });
-    Mesh mesh(VBData, sizeof(VBData), { 3, 2 });
-    mesh.addSubmesh(VBIndeces, sizeof(VBIndeces) / sizeof(unsigned int), &shader);
+    // light source
+    ShaderProgram lightSourceShader(LIGHT_SOURCE_VS, LIGHT_SOURCE_FS);
+    Mesh lightSourceMesh(CUBE_DATA, sizeof(CUBE_DATA), { 3 });
+    lightSourceMesh.addSubmesh(CUBE_INDICES, NUM_INDICES, &lightSourceShader);
 
-    Texture shelf(SHELF_TEXTURE, 0u);
-    Texture face(FACE_TEXTURE, 1u);
-    shader.addTexture(&shelf, "u_texture_shelf");
-    shader.addTexture(&face, "u_texture_face");
+    // colored cube
+    ShaderProgram coloredCubeShader(COLORED_CUBE_VS, COLORED_CUBE_FS);
+    coloredCubeShader.addUniform3f("u_objectColor", 1.0f, 0.5f, 0.31f);
+    coloredCubeShader.addUniform3f("u_lightColor", 1.0f, 1.0f, 1.0f);
+    Mesh coloredCubeMesh(CUBE_DATA, sizeof(CUBE_DATA), { 3 });
+    coloredCubeMesh.addSubmesh(CUBE_INDICES, NUM_INDICES, &coloredCubeShader);
 
     // variables for deltaTime
     double previousTime = glfwGetTime();
@@ -204,18 +200,23 @@ int main() {
         // clear the screen and the depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // the MVP matrices
         glm::mat4 model = glm::mat4(1.0f);
-        shader.addUniformMat4f("u_model", model);
+        coloredCubeShader.addUniformMat4f("u_model", model);
+        model = glm::translate(model, glm::vec3(3.0f, 2.0f, -3.0f));
+        model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+        lightSourceShader.addUniformMat4f("u_model", model);
         
         glm::mat4 view = g_camera.getViewMatrix();
-        shader.addUniformMat4f("u_view", view);
+        coloredCubeShader.addUniformMat4f("u_view", view);
+        lightSourceShader.addUniformMat4f("u_view", view);
 
         float scrRatio = static_cast<float>(scrWidth) / static_cast<float>(scrHeight);
         glm::mat4 projection = glm::perspective(glm::radians(g_camera.getZoom()), scrRatio, 0.1f, 100.0f);
-        shader.addUniformMat4f("u_projection", projection);
+        coloredCubeShader.addUniformMat4f("u_projection", projection);
+        lightSourceShader.addUniformMat4f("u_projection", projection);
 
-        mesh.render();
+        coloredCubeMesh.render();
+        lightSourceMesh.render();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
