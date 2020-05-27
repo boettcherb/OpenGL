@@ -17,7 +17,7 @@ public:
 		RIGHT,
 	};
 
-	Camera();
+	Camera(const glm::vec3& initialPosition);
 	glm::mat4 getViewMatrix() const;
 	void processKeyboard(CameraMovement direction, float deltaTime);
 	void processMouseMovement(float mouseX, float mouseY);

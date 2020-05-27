@@ -7,15 +7,13 @@
 #include <cmath>
 
 const glm::vec3 WORLD_UP = glm::vec3(0.0f, 1.0f, 0.0f);
-const glm::vec3 DEFAULT_POSITION = glm::vec3(0.0f, 0.0f, 0.0f);
 const float DEFAULT_YAW = -90.0f;
 const float DEFAULT_PITCH = 0.0f;
 const float DEFAULT_SPEED = 2.5f;
 const float DEFAULT_SENSITIVITY = 0.1f;
 const float DEFAULT_ZOOM = 45.0f;
 
-Camera::Camera() {
-    m_position = DEFAULT_POSITION;
+Camera::Camera(const glm::vec3& initialPosition) : m_position { initialPosition } {
     m_yaw = DEFAULT_YAW;
     m_pitch = DEFAULT_PITCH;
     m_movementSpeed = DEFAULT_SPEED;
